@@ -4,7 +4,7 @@ namespace FunWithTypes
 {
     class Program
     {
-        static void Main(string[] args)
+        static void Main()
         {
             NumericTypes();
             //CharType();
@@ -49,6 +49,13 @@ namespace FunWithTypes
             Console.WriteLine(int.Parse("432423"));
             Console.WriteLine(decimal.Parse("4.43"));
             Console.WriteLine(DateTime.Parse("2018-06-05"));
+
+            Console.WriteLine("Enter the double: ");
+            var str = Console.ReadLine();
+
+            double doubleValue;
+            var parsed = double.TryParse(str, out doubleValue);
+            Console.WriteLine($"Parsed: {parsed}; Value: {doubleValue}");
         }
 
         static void CharType()
