@@ -4,7 +4,7 @@ namespace Classes
 {
     public abstract class Car
     {
-        public readonly Brand brand;
+        protected readonly Brand brand;
         private int currentSpeed;
         private bool engineStarted;
         protected int axisCount = 2;
