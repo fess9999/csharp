@@ -4,6 +4,13 @@ namespace Trains
 {
     class Program
     {
+        private static void CheckForDepart(Train train)
+        {
+            Console.WriteLine(!train.AllowedToDepart
+                ? "Train may not depart! Wait for the passengers seat"
+                : "All passengers aboard. We may depart!");
+        }
+
         static void Main()
         {
             const string stationA = "Moscow";
@@ -12,8 +19,8 @@ namespace Trains
             var train = new Train(stationA);
             train.Print();
 
-            train.CoupleCars(new Car(CarType.Passenger), new Car(CarType.Passenger), new Car(CarType.Post));
-            train.CoupleCars(new Car(CarType.Freight));
+            train.CoupleCars(new PassengerCar(100), new PassengerCar(30), new PostCar());
+            train.CoupleCars(new FreightCar(130));
             train.Print();
 
             train.DecoupleCars(1);
@@ -21,6 +28,22 @@ namespace Trains
 
             Console.WriteLine();
             Console.WriteLine("Engineer, this is dispatcher speaking. You are allowed to depart on green signal!");
+
+            CheckForDepart(train);
+            Console.WriteLine("Boarding...");
+
+            foreach (var car in train.Cars)
+            {
+                if (car is PassengerCar passengerCar)
+                {
+                    passengerCar.CurrentPassengerCount = 12;
+                    passengerCar.Conductor.AllowedToDepart = true;
+                    passengerCar.Print();
+                    Console.WriteLine(" ");
+                }
+            }
+
+            CheckForDepart(train);
 
             var previousSpeed = -1;
 

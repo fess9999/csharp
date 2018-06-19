@@ -2,18 +2,11 @@
 
 namespace Trains
 {
-    public class Car
+    public abstract class Car
     {
-        private readonly CarType carType;
-
-        public Car(CarType carType)
+        public virtual void Print()
         {
-            this.carType = carType;
-        }
-
-        public void Print()
-        {
-            Console.Write(carType);
+            Console.Write($"{GetType().Name} ");
         }
     }
 }

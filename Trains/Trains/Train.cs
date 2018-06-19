@@ -5,12 +5,16 @@ namespace Trains
     public class Train
     {
         private const int SpeedStep = 10;
-
         private Car[] cars;
+
+        public Car[] Cars
+        {
+            get { return cars; }
+        }
 
         public Train(string stationName)
         {
-            cars = new[] {new Car(CarType.Locomotive)};
+            cars = new Car[] {new LocomotiveCar()};
             CurrentStation = stationName;
         }
 
@@ -36,7 +40,7 @@ namespace Trains
 
         public void CoupleCars(params Car[] newCars)
         {
-            var newSize = cars.Length + newCars.Length;
+            var newSize = Cars.Length + newCars.Length;
 
             if (newSize > CarsLimit)
             {
@@ -45,12 +49,27 @@ namespace Trains
             }
 
             Array.Resize(ref cars, newSize);
-            newCars.CopyTo(cars, cars.Length - newCars.Length);
+            newCars.CopyTo(Cars, Cars.Length - newCars.Length);
+        }
+
+        public bool AllowedToDepart
+        {
+            get
+            {
+                var allowed = true;
+                foreach (var car in Cars)
+                {
+                    if (car is PassengerCar passengerCar && !passengerCar.Conductor.AllowedToDepart)
+                        allowed = false;
+                }
+
+                return allowed;
+            }
         }
 
         public void DecoupleCars(int carCount)
         {
-            var newSize = cars.Length - carCount;
+            var newSize = Cars.Length - carCount;
 
             if (newSize < 1)
             {
@@ -63,7 +82,7 @@ namespace Trains
 
         public void Print()
         {
-            foreach (var car in cars)
+            foreach (var car in Cars)
             {
                 car.Print();
                 Console.Write("-");
