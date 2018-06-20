@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Trains
 {
@@ -11,6 +13,13 @@ namespace Trains
         {
             get { return cars; }
         }
+
+        public List<string> GetAllowedToDepartCars() => 
+            Cars.OfType<PassengerCar>()
+            .Where(car => car.CurrentPassengerCount > 0 && car.Conductor.AllowedToDepart)
+            .OrderBy(car => car.CurrentPassengerCount)
+            .Select(car => $"{car.CurrentPassengerCount} {car.MaxPassengerCount}")
+                .ToList();
 
         public Train(string stationName)
         {
