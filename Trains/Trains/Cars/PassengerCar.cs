@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace Trains
+namespace Trains.Cars
 {
-    public class PassengerCar : Car
+    public class PassengerCar : Car, IHasConductor
     {
         public PassengerCar(int maxPassengerCount)
         {

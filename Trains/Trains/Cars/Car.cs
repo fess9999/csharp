@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Trains
+namespace Trains.Cars
 {
     public abstract class Car
     {

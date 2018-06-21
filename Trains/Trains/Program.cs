@@ -1,4 +1,6 @@
 ﻿using System;
+using Trains.Cars;
+using Trains.Exceptions;
 
 namespace Trains
 {
@@ -34,28 +36,38 @@ namespace Trains
 
             foreach (var car in train.Cars)
             {
-                if (car is PassengerCar passengerCar)
+
+                if (car is IHasConductor hasConductor)
                 {
-                    passengerCar.CurrentPassengerCount = 12;
-                    passengerCar.Conductor.AllowedToDepart = true;
-                    passengerCar.Print();
+                    if (hasConductor is PassengerCar passengerCar)
+                        passengerCar.CurrentPassengerCount = 12;
+                    hasConductor.Conductor.AllowedToDepart = true;
+                    car.Print();
                     Console.WriteLine(" ");
                 }
             }
 
             CheckForDepart(train);
 
-            var previousSpeed = -1;
-
-            while (train.CurrentSpeed != previousSpeed)
+            while (true)
             {
-                previousSpeed = train.CurrentSpeed;
-                train.SpeedUp();
-                train.Print();
+                try
+                {
+                    train.SpeedUp();
+                }
+                catch (OverspeedException exception)
+                {
+                    Console.WriteLine($"{exception.Message}, Limit = {exception.MaxSpeed}");
+                    break;
+                }
+                finally
+                {
+                    train.Print();
+                }
             }
 
             Console.WriteLine($"Dear passengers, we are arriving at {stationB} in 5 nanoseconds");
-            previousSpeed = 0;
+            var previousSpeed = 0;
             while (train.CurrentSpeed != previousSpeed)
             {
                 previousSpeed = train.CurrentSpeed;

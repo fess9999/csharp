@@ -1,18 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Trains.Cars;
+using Trains.Exceptions;
 
 namespace Trains
 {
     public class Train
     {
         private const int SpeedStep = 10;
-        private Car[] cars;
 
-        public Car[] Cars
-        {
-            get { return cars; }
-        }
+        public Stack<Car> Cars { get; set; }
 
         public List<string> GetAllowedToDepartCars() => 
             Cars.OfType<PassengerCar>()
@@ -23,7 +21,8 @@ namespace Trains
 
         public Train(string stationName)
         {
-            cars = new Car[] {new LocomotiveCar()};
+            Cars = new Stack<Car>();
+            Cars.Push(new LocomotiveCar());
             CurrentStation = stationName;
         }
 
@@ -38,7 +37,12 @@ namespace Trains
         public void SpeedUp()
         {
             var newSpeed = CurrentSpeed + SpeedStep;
-            CurrentSpeed = newSpeed > RussiaSpeedLimit ? RussiaSpeedLimit : newSpeed;
+            if (newSpeed > RussiaSpeedLimit) throw new OverspeedException("Overspeed")
+            {
+                MaxSpeed = RussiaSpeedLimit
+            };
+
+            CurrentSpeed = newSpeed;
         }
 
         public void SpeedDown()
@@ -49,16 +53,18 @@ namespace Trains
 
         public void CoupleCars(params Car[] newCars)
         {
-            var newSize = Cars.Length + newCars.Length;
+            var newSize = Cars.Count + newCars.Length;
 
             if (newSize > CarsLimit)
             {
-                Console.WriteLine("You cannot couple these cars!");
-                return;
+                throw new CarsLimitException("Car limit reached")
+                {
+                    CarLimit = CarsLimit
+                };
             }
 
-            Array.Resize(ref cars, newSize);
-            newCars.CopyTo(Cars, Cars.Length - newCars.Length);
+            foreach (var newCar in newCars)
+                Cars.Push(newCar);
         }
 
         public bool AllowedToDepart
@@ -68,7 +74,7 @@ namespace Trains
                 var allowed = true;
                 foreach (var car in Cars)
                 {
-                    if (car is PassengerCar passengerCar && !passengerCar.Conductor.AllowedToDepart)
+                    if (car is IHasConductor conductorCar && !conductorCar.Conductor.AllowedToDepart)
                         allowed = false;
                 }
 
@@ -78,7 +84,7 @@ namespace Trains
 
         public void DecoupleCars(int carCount)
         {
-            var newSize = Cars.Length - carCount;
+            var newSize = Cars.Count - carCount;
 
             if (newSize < 1)
             {
@@ -86,7 +92,8 @@ namespace Trains
                 return;
             }
 
-            Array.Resize(ref cars, newSize);
+            for (var i = 0; i < carCount; i++)
+                Cars.Pop();
         }
 
         public void Print()
