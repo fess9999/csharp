@@ -1,0 +1,1 @@
+﻿Content of textFile1.txt
