@@ -6,10 +6,7 @@ namespace Trains.Cars
     {
         public int Capacity { get; }
 
-        public FreightCar(int capacity)
-        {
-            Capacity = capacity;
-        }
+        public FreightCar(int capacity) => Capacity = capacity;
 
         public override void Print()
         {

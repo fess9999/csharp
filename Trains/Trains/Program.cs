@@ -1,17 +1,13 @@
 ﻿using System;
 using Trains.Cars;
-using Trains.Exceptions;
 
 namespace Trains
 {
     class Program
     {
-        private static void CheckForDepart(Train train)
-        {
-            Console.WriteLine(!train.AllowedToDepart
-                ? "Train may not depart! Wait for the passengers seat"
-                : "All passengers aboard. We may depart!");
-        }
+        private static void CheckForDepart(Train train) => Console.WriteLine(!train.AllowedToDepart
+            ? "Train may not depart! Wait for the passengers seat"
+            : "All passengers aboard. We may depart!");
 
         static void Main()
         {
@@ -28,6 +24,10 @@ namespace Trains
             train.DecoupleCars(1);
             train.Print();
 
+            Console.WriteLine($"We have {train.GetCarCount<PassengerCar>()} passenger cars");
+            Console.WriteLine($"We have {train.GetCarCount<IHasConductor>()} conductor cars");
+            Console.WriteLine($"We have {train.GetCarCount<int>()} integer cars?!");
+
             Console.WriteLine();
             Console.WriteLine("Engineer, this is dispatcher speaking. You are allowed to depart on green signal!");
 
@@ -36,7 +36,6 @@ namespace Trains
 
             foreach (var car in train.Cars)
             {
-
                 if (car is IHasConductor hasConductor)
                 {
                     if (hasConductor is PassengerCar passengerCar)
@@ -49,21 +48,16 @@ namespace Trains
 
             CheckForDepart(train);
 
-            while (true)
+            var keepAccelerating = true;
+            train.OnOverspeed += speed =>
+                Console.WriteLine(
+                    $"This is dispatcher speaking. You are about overspeeding {speed} kph. Stop acceleration");
+            train.OnOverspeed += speed => keepAccelerating = false;
+
+            while (keepAccelerating)
             {
-                try
-                {
-                    train.SpeedUp();
-                }
-                catch (OverspeedException exception)
-                {
-                    Console.WriteLine($"{exception.Message}, Limit = {exception.MaxSpeed}");
-                    break;
-                }
-                finally
-                {
-                    train.Print();
-                }
+                train.SpeedUp();
+                train.Print();
             }
 
             Console.WriteLine($"Dear passengers, we are arriving at {stationB} in 5 nanoseconds");

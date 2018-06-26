@@ -4,10 +4,7 @@ namespace Trains.Cars
 {
     public class PassengerCar : Car, IHasConductor
     {
-        public PassengerCar(int maxPassengerCount)
-        {
-            MaxPassengerCount = maxPassengerCount;
-        }
+        public PassengerCar(int maxPassengerCount) => MaxPassengerCount = maxPassengerCount;
 
         public int MaxPassengerCount { get; }
 

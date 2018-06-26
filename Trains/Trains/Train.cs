@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using MoreLinq;
 using Trains.Cars;
 using Trains.Exceptions;
 
@@ -10,14 +11,9 @@ namespace Trains
     {
         private const int SpeedStep = 10;
 
-        public Stack<Car> Cars { get; set; }
+        public event Action<int> OnOverspeed;
 
-        public List<string> GetAllowedToDepartCars() => 
-            Cars.OfType<PassengerCar>()
-            .Where(car => car.CurrentPassengerCount > 0 && car.Conductor.AllowedToDepart)
-            .OrderBy(car => car.CurrentPassengerCount)
-            .Select(car => $"{car.CurrentPassengerCount} {car.MaxPassengerCount}")
-                .ToList();
+        public Stack<Car> Cars { get; set; }
 
         public Train(string stationName)
         {
@@ -37,10 +33,12 @@ namespace Trains
         public void SpeedUp()
         {
             var newSpeed = CurrentSpeed + SpeedStep;
-            if (newSpeed > RussiaSpeedLimit) throw new OverspeedException("Overspeed")
+
+            if (newSpeed > RussiaSpeedLimit)
             {
-                MaxSpeed = RussiaSpeedLimit
-            };
+                OnOverspeed?.Invoke(RussiaSpeedLimit);
+                return;
+            }
 
             CurrentSpeed = newSpeed;
         }
@@ -63,24 +61,25 @@ namespace Trains
                 };
             }
 
-            foreach (var newCar in newCars)
-                Cars.Push(newCar);
+            newCars.ForEach(car => Cars.Push(car));
         }
 
-        public bool AllowedToDepart
-        {
-            get
-            {
-                var allowed = true;
-                foreach (var car in Cars)
-                {
-                    if (car is IHasConductor conductorCar && !conductorCar.Conductor.AllowedToDepart)
-                        allowed = false;
-                }
+        public int GetCarCount<TCar>() => Cars.OfType<TCar>().Count();
 
-                return allowed;
-            }
-        }
+        public bool AllowedToDepart => Cars.OfType<IHasConductor>().All(conductorCar => conductorCar.Conductor.AllowedToDepart);
+        //{
+        //    get
+        //    {
+        //        var allowed = true;
+        //        foreach (var car in Cars)
+        //        {
+        //            if (car is IHasConductor conductorCar && !conductorCar.Conductor.AllowedToDepart)
+        //                allowed = false;
+        //        }
+
+        //        return allowed;
+        //    }
+        //}
 
         public void DecoupleCars(int carCount)
         {
@@ -92,17 +91,16 @@ namespace Trains
                 return;
             }
 
-            for (var i = 0; i < carCount; i++)
-                Cars.Pop();
+            Enumerable.Range(0, carCount).ForEach(i => Cars.Pop());
         }
 
         public void Print()
         {
-            foreach (var car in Cars)
+            Cars.ForEach(car =>
             {
                 car.Print();
                 Console.Write("-");
-            }
+            });
 
             Console.WriteLine($" Station: {CurrentStation}, Speed {CurrentSpeed}");
         }
