@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Reflection;
 using MoreLinq;
+using Trains.Attributes;
 using Trains.Cars;
 using Trains.Exceptions;
 
@@ -11,10 +14,6 @@ namespace Trains
     {
         private const int SpeedStep = 10;
 
-        public event Action<int> OnOverspeed;
-
-        public Stack<Car> Cars { get; set; }
-
         public Train(string stationName)
         {
             Cars = new Stack<Car>();
@@ -22,13 +21,20 @@ namespace Trains
             CurrentStation = stationName;
         }
 
+        public Stack<Car> Cars { get; set; }
+
         public int CurrentSpeed { get; set; }
 
         public string CurrentStation { get; set; }
 
         public static int RussiaSpeedLimit { get; } = 120;
 
-        public static int CarsLimit { get; } = 100; 
+        public static int CarsLimit { get; } = 100;
+
+        public bool AllowedToDepart =>
+            Cars.OfType<IHasConductor>().All(conductorCar => conductorCar.Conductor.AllowedToDepart);
+
+        public event Action<int> OnOverspeed;
 
         public void SpeedUp()
         {
@@ -61,25 +67,33 @@ namespace Trains
                 };
             }
 
-            newCars.ForEach(car => Cars.Push(car));
+            newCars.ForEach(car =>
+            {
+                ValidateCar(car);
+                Cars.Push(car);
+            });
+        }
+
+        private void ValidateCar(Car car)
+        {
+            var properties = car.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public);
+
+            var validations = new List<(Func<PropertyInfo, bool> Validate, Func<PropertyInfo, string> Message)>
+            {
+                (info => info.PropertyType == typeof(int) && info.IsDefined(typeof(ShoudBeZeroAttribute)) && (int) info.GetValue(car) != 0,
+                    info => $"{info.Name} should be 0"),
+                (info => !info.PropertyType.IsValueType && info.IsDefined(typeof(ShoudNotBeNullAttribute)) && info.GetValue(car) == null,
+                    info => $"{info.Name} should not be null")
+            };
+
+            var failedValidation = properties
+                .Select(info => validations.FirstOrDefault(tuple => tuple.Validate(info)).Message?.Invoke(info))
+                .FirstOrDefault(message => !string.IsNullOrEmpty(message));
+
+            if (failedValidation != null) throw new ValidationException(failedValidation);
         }
 
         public int GetCarCount<TCar>() => Cars.OfType<TCar>().Count();
-
-        public bool AllowedToDepart => Cars.OfType<IHasConductor>().All(conductorCar => conductorCar.Conductor.AllowedToDepart);
-        //{
-        //    get
-        //    {
-        //        var allowed = true;
-        //        foreach (var car in Cars)
-        //        {
-        //            if (car is IHasConductor conductorCar && !conductorCar.Conductor.AllowedToDepart)
-        //                allowed = false;
-        //        }
-
-        //        return allowed;
-        //    }
-        //}
 
         public void DecoupleCars(int carCount)
         {

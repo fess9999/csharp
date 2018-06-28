@@ -1,4 +1,5 @@
 ﻿using System;
+using Trains.Attributes;
 
 namespace Trains.Cars
 {
@@ -8,14 +9,16 @@ namespace Trains.Cars
 
         public int MaxPassengerCount { get; }
 
+        [ShoudBeZero]
         public int CurrentPassengerCount { get; set; }
 
+        [ShoudNotBeNull]
         public Conductor Conductor { get; set; } = new Conductor();
 
         public override void Print()
         {
             base.Print();
-            Console.Write($"{CurrentPassengerCount}/{MaxPassengerCount}, {Conductor.AllowedToDepart}");
+            Console.Write($"{CurrentPassengerCount}/{MaxPassengerCount}, {Conductor?.AllowedToDepart}");
         }
     }
 }
